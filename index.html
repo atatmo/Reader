@@ -3,64 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile Archive Reader</title>
-    <!-- Obsługa PWA z poprzedniego kroku -->
+    <title>Mobile HTML Reader</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <style>
-        body { font-family: sans-serif; margin: 0; background: #f0f0f0; }
+        /* Płaski, minimalistyczny design dla lepszego skupienia na tekście */
+        :root {
+            --bg-color: #f1f5f9;
+            --surface-color: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --accent: #3b82f6;
+        }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            margin: 0; 
+            background: var(--bg-color); 
+            color: var(--text-main);
+            line-height: 1.6;
+        }
         
-        /* Górny panel - trochę węższy i z cieniem */
+        /* Czysty górny panel */
         #controls { 
-            padding: 15px; 
-            background: #fff; 
-            border-bottom: 1px solid #ddd; 
+            padding: 16px; 
+            background: var(--surface-color); 
+            border-bottom: 1px solid var(--border-color); 
             position: sticky; 
             top: 0; 
             z-index: 100; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        input[type="file"] {
+            display: block;
+            width: 100%;
+            padding: 8px 0;
+            font-size: 14px;
         }
         
-        /* Zwijany panel spisu treści */
-        #toc-wrapper { display: none; margin-top: 10px; }
-        summary { font-weight: bold; cursor: pointer; padding: 5px 0; outline: none; }
+        /* Zwijany spis treści */
+        #toc-wrapper { margin-top: 12px; }
+        summary { 
+            font-weight: 600; 
+            cursor: pointer; 
+            padding: 8px; 
+            background: var(--bg-color);
+            border-radius: 6px;
+            outline: none; 
+            user-select: none;
+            color: var(--text-main);
+        }
         
         #toc { 
-            background: #fafafa; 
-            padding: 10px; 
-            margin-top: 10px; 
+            background: var(--surface-color); 
+            padding: 12px; 
+            margin-top: 8px; 
             border-radius: 8px; 
-            max-height: 35vh; /* Max 35% wysokości ekranu */
-            overflow-y: auto; /* Własny pasek przewijania dla długich spisów */
-            border: 1px solid #eee;
+            max-height: 40vh; 
+            overflow-y: auto; 
+            border: 1px solid var(--border-color);
         }
-        #tocList { margin: 0; padding-left: 20px; font-size: 0.95em; line-height: 1.5; }
-        #tocList li { margin-bottom: 8px; }
+        #tocList { margin: 0; padding-left: 20px; font-size: 0.95em; }
+        #tocList li { margin-bottom: 10px; }
+        #tocList a { color: var(--accent); text-decoration: none; }
         
-        /* Główny kontener na tekst */
+        /* Kontener na główny tekst */
         #viewer-container { 
-            max-width: 480px; 
+            max-width: 600px; /* Optymalna szerokość dla czytelności */
             margin: 0 auto; 
-            background: white; 
+            background: var(--surface-color); 
             min-height: 100vh; 
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            padding: 20px;
+            padding: 24px 20px 80px 20px;
             box-sizing: border-box;
         }
         
-        /* Sprawia, że zarchiwizowane obrazki nie rozsadzają ekranu w bok */
-        #contentArea img { max-width: 100%; height: auto; }
-        #contentArea { word-wrap: break-word; }
+        #contentArea img { max-width: 100%; height: auto; border-radius: 8px; }
+        #contentArea { word-wrap: break-word; font-size: 16px; }
+
+        /* =========================================
+           STYLANIE I INTERAKCJA WYCIĄGNIĘTYCH DANYCH 
+           ========================================= */
+
+        /* 1. Znaczniki przypisów - wyglądają jak małe przyciski */
+        .wnl-note-marker {
+            cursor: pointer;
+            background-color: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 2px 8px !important;
+            margin: 0 4px;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            user-select: none;
+        }
+        .wnl-note-marker:active { transform: scale(0.95); }
+        .wnl-note-marker.active {
+            background-color: #e0f2fe;
+            border-color: #7dd3fc;
+        }
+
+        /* 2. Ukrywanie notatek domyślnie (!important nadpisuje style z Twojego skryptu) */
+        .wnl-extracted-note {
+            display: none !important; 
+            opacity: 0;
+            transform: translateY(-5px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            margin: 12px 0 !important;
+            width: 100% !important;
+        }
+
+        /* Klasa dodawana przez JavaScript, by pokazać notatkę */
+        .wnl-extracted-note.is-expanded {
+            display: block !important;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Wyróżnienie mnemotechnik */
+        .wnl-extracted-note[data-category="mnemotechnika"] {
+            border-left-width: 6px !important;
+            background-color: #faf5ff !important;
+        }
+
+        /* Podstawowy układ dla obrazków medycznych / schematów */
+        .wnl-extracted-image {
+            margin: 24px 0 !important;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
 
 <div id="controls">
     <input type="file" id="fileInput" accept=".html">
-    
-    <!-- Nowy, zwijany spis treści -->
     <details id="toc-wrapper">
-        <summary>Pokaż / Ukryj spis treści</summary>
+        <summary>📑 Spis treści</summary>
         <div id="toc">
             <ul id="tocList"></ul>
         </div>
@@ -68,11 +149,12 @@
 </div>
 
 <div id="viewer-container">
-    <div id="contentArea">Wybierz plik HTML, aby rozpocząć czytanie...</div>
+    <div id="contentArea" style="text-align: center; color: #94a3b8; margin-top: 40px;">
+        Wybierz wyekstrahowany plik HTML...
+    </div>
 </div>
 
 <script>
-    // Rejestracja Service Workera dla aplikacji mobilnej (PWA)
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').catch(err => console.log('Błąd SW:', err));
     }
@@ -87,37 +169,68 @@
             const parser = new DOMParser();
             const doc = parser.parseFromString(content, 'text/html');
             
+            // 1. Oczyszczenie wczytanego dokumentu z niepotrzebnych otoczek skryptu (jeśli są)
+            let mainContent = doc.querySelector('#paper') ? doc.querySelector('#paper').innerHTML : doc.body.innerHTML;
+            document.getElementById('contentArea').innerHTML = mainContent;
+
+            // 2. Generowanie spisu treści
             const tocList = document.getElementById('tocList');
             tocList.innerHTML = '';
-            const headers = doc.querySelectorAll('h1, h2, h3');
+            const headers = document.getElementById('contentArea').querySelectorAll('h1, h2, h3');
             
             if(headers.length > 0) {
-                // Pokazujemy nasz zwijany panel
                 document.getElementById('toc-wrapper').style.display = 'block';
-                
                 headers.forEach((h, index) => {
                     const id = `heading-${index}`;
                     h.setAttribute('id', id); 
-                    
                     const li = document.createElement('li');
-                    li.innerHTML = `<a href="#${id}" style="color: #0066cc; text-decoration: none;">${h.innerText}</a>`;
+                    li.innerHTML = `<a href="#${id}">${h.innerText}</a>`;
                     
-                    // Magia UX: Po kliknięciu w link, spis treści sam się zwija
                     li.querySelector('a').addEventListener('click', () => {
                         document.getElementById('toc-wrapper').removeAttribute('open');
                     });
-
                     tocList.appendChild(li);
                 });
             } else {
                 document.getElementById('toc-wrapper').style.display = 'none';
             }
 
-            // Wrzucamy całą zawartość dokumentu do readera
-            document.getElementById('contentArea').innerHTML = doc.body.innerHTML;
+            // 3. Logika otwierania/zamykania przypisów
+            setupInteractiveNotes();
         };
         reader.readAsText(file);
     });
+
+    function setupInteractiveNotes() {
+        const contentArea = document.getElementById('contentArea');
+        
+        // Wykorzystujemy Event Delegation - nasłuchujemy kliknięć w całym kontenerze
+        contentArea.addEventListener('click', function(e) {
+            
+            // Szukamy najbliższego elementu, który jest markerem przypisu
+            const marker = e.target.closest('.wnl-note-marker');
+            
+            if (marker) {
+                // Pobieramy ID notatki z atrybutu (np. "note-1")
+                const targetId = marker.getAttribute('data-target-note');
+                if (!targetId) return;
+
+                const noteDiv = document.getElementById(targetId);
+                if (noteDiv) {
+                    // Przełączamy widoczność
+                    const isExpanded = noteDiv.classList.contains('is-expanded');
+                    
+                    if (isExpanded) {
+                        noteDiv.classList.remove('is-expanded');
+                        marker.classList.remove('active');
+                    } else {
+                        noteDiv.classList.add('is-expanded');
+                        marker.classList.add('active');
+                    }
+                }
+            }
+        });
+    }
 </script>
 </body>
 </html>

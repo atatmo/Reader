@@ -169,13 +169,24 @@
             const parser = new DOMParser();
             const doc = parser.parseFromString(content, 'text/html');
             
+            // 1. ZABEZPIECZENIE NATYWNE: Import oryginalnych stylów z pliku SingleFile
+            // Wstrzykujemy CSS do naszego dokumentu, by przeglądarka mogła wyrenderować tła zmiennych
+            const styles = doc.querySelectorAll('style');
+            styles.forEach(styleNode => {
+                const newStyle = document.createElement('style');
+                newStyle.innerHTML = styleNode.innerHTML;
+                newStyle.classList.add('imported-sf-style'); // Znakujemy, żeby w przyszłości nie duplikować
+                document.head.appendChild(newStyle);
+            });
+
+            // 2. Ładowanie głównej treści
             let mainContent = doc.querySelector('#paper') ? doc.querySelector('#paper').innerHTML : doc.body.innerHTML;
             document.getElementById('contentArea').innerHTML = mainContent;
 
-            // --- NOWOŚĆ: WYWOŁANIE EKSTRAKCJI OBRAZÓW ---
-            // Przekazujemy surowy tekst pliku (content), bo tam ukryte są definicje CSS
-            restoreSingleFileImages(content);
+            // 3. Ręczna naprawa i konwersja obrazków
+            restoreSingleFileImages(doc);
 
+            // 4. Budowanie spisu treści
             const tocList = document.getElementById('tocList');
             tocList.innerHTML = '';
             const headers = document.getElementById('contentArea').querySelectorAll('h1, h2, h3');
@@ -202,13 +213,18 @@
         reader.readAsText(file);
     });
 
-    // --- NOWA FUNKCJA POBRANA Z LOGIKI PYTHONOWEJ ---
-    function restoreSingleFileImages(rawContent) {
-        // 1. Zbudowanie słownika wszystkich obrazów ukrytych w zmiennych CSS SingleFile
+    function restoreSingleFileImages(doc) {
+        // Zbieramy cały tekst z arkuszy stylów do jednego stringa
+        const styles = doc.querySelectorAll('style');
+        let allCSS = '';
+        styles.forEach(s => allCSS += s.innerHTML);
+
+        // BUDOWA SŁOWNIKA ZMIENNYCH CSS
         const sfImages = {};
-        const regex = /(--sf-img-\d+)\s*:\s*url\(['"]?(data:image\/[^'"]+)['"]?\)/g;
+        // NOWY REGEX: \)]+ zatrzymuje się dokładnie na nawiasie, niezależnie od tego czy są cudzysłowy
+        const regex = /(--sf-img-\d+)\s*:\s*url\(['"]?(data:image\/[^'"\)]+)['"]?\)/g;
         let match;
-        while ((match = regex.exec(rawContent)) !== null) {
+        while ((match = regex.exec(allCSS)) !== null) {
             sfImages[match[1]] = match[2]; 
         }
 
@@ -219,32 +235,27 @@
             const currentSrc = img.getAttribute('src') || '';
             const styleAttr = img.getAttribute('style') || '';
             const sfSrc = img.getAttribute('data-sf-original-src') || '';
-            
-            // Szukamy tagów <picture>, jeśli zdjęcie zostało osadzone w <source>
             const parentPicture = img.closest('picture');
 
-            // Jeśli zdjęcie to pułapka (przezroczysty SVG)
             if (currentSrc.startsWith('data:image/svg+xml')) {
                 let newSrc = null;
 
-                // Sprawdzamy, czy obrazek ukryto przez zmienną w atrybucie style
+                // Sprawdzamy atrybut style na obecność nazwy zmiennej
                 const varMatch = styleAttr.match(/var\((--sf-img-\d+)\)/);
                 if (varMatch && sfImages[varMatch[1]]) {
                     newSrc = sfImages[varMatch[1]];
                 } 
-                // Bezpiecznik: jeśli SingleFile wrzuciło Base64 bezpośrednio w ten atrybut
                 else if (sfSrc.startsWith('data:image')) {
                     newSrc = sfSrc;
                 }
 
                 if (newSrc) {
                     img.src = newSrc;
-                    // Resetujemy style SingleFile, żeby nie nakładały się na faktyczne zdjęcie
+                    // Czyścimy atrybuty odpowiedzialne za "oszustwa" SingleFile
                     img.style.backgroundImage = 'none';
                     img.style.backgroundBlendMode = 'normal';
                 }
             } 
-            // Obsługa tagów <picture> (częsty zabieg przy responsywnych diagramach)
             else if (parentPicture) {
                 const source = parentPicture.querySelector('source');
                 if (source && source.getAttribute('srcset')) {

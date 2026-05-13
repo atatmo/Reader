@@ -7,7 +7,6 @@
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <style>
-        /* Płaski, minimalistyczny design dla lepszego skupienia na tekście */
         :root {
             --bg-color: #f1f5f9;
             --surface-color: #ffffff;
@@ -25,7 +24,6 @@
             line-height: 1.6;
         }
         
-        /* Czysty górny panel */
         #controls { 
             padding: 16px; 
             background: var(--surface-color); 
@@ -43,7 +41,6 @@
             font-size: 14px;
         }
         
-        /* Zwijany spis treści */
         #toc-wrapper { margin-top: 12px; }
         summary { 
             font-weight: 600; 
@@ -69,24 +66,24 @@
         #tocList li { margin-bottom: 10px; }
         #tocList a { color: var(--accent); text-decoration: none; }
         
-        /* Kontener na główny tekst */
         #viewer-container { 
-            max-width: 600px; /* Optymalna szerokość dla czytelności */
+            max-width: 600px; 
             margin: 0 auto; 
             background: var(--surface-color); 
             min-height: 100vh; 
             padding: 24px 20px 80px 20px;
             box-sizing: border-box;
+            /* Ukrywamy domyślne suwaki poziome jeśli coś jeszcze by wystawało */
+            overflow-x: hidden; 
         }
         
         #contentArea img { max-width: 100%; height: auto; border-radius: 8px; }
         #contentArea { word-wrap: break-word; font-size: 16px; }
 
         /* =========================================
-           STYLANIE I INTERAKCJA WYCIĄGNIĘTYCH DANYCH 
+           STYLANIE - NOTATKI I PRZYPISY
            ========================================= */
 
-        /* 1. Znaczniki przypisów - wyglądają jak małe przyciski */
         .wnl-note-marker {
             cursor: pointer;
             background-color: #f1f5f9;
@@ -97,42 +94,49 @@
             transition: all 0.2s ease;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
             user-select: none;
+            display: inline-block; /* Lepsze klikanie na telefonie */
         }
         .wnl-note-marker:active { transform: scale(0.95); }
-        .wnl-note-marker.active {
-            background-color: #e0f2fe;
-            border-color: #7dd3fc;
-        }
+        .wnl-note-marker.active { background-color: #e0f2fe; border-color: #7dd3fc; }
 
-        /* 2. Ukrywanie notatek domyślnie (!important nadpisuje style z Twojego skryptu) */
+        /* NAPRAWA WYCHODZĄCYCH RAMEK */
         .wnl-extracted-note {
             display: none !important; 
             opacity: 0;
             transform: translateY(-5px);
             transition: opacity 0.3s ease, transform 0.3s ease;
-            margin: 12px 0 !important;
-            width: 100% !important;
+            
+            /* Twarde nadpisanie marginesów i szerokości z ekstraktora */
+            width: 100% !important; 
+            box-sizing: border-box !important; 
+            margin: 12px 0 !important; 
+            padding: 16px !important;
+            border-radius: 8px !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05) !important;
+            
+            /* Zmuszamy tekst w notatce do przełamania do nowej linii, niezależnie od tego gdzie jesteśmy */
+            clear: both !important;
+            display: block;
         }
 
-        /* Klasa dodawana przez JavaScript, by pokazać notatkę */
         .wnl-extracted-note.is-expanded {
             display: block !important;
             opacity: 1;
             transform: translateY(0);
         }
 
-        /* Wyróżnienie mnemotechnik */
         .wnl-extracted-note[data-category="mnemotechnika"] {
             border-left-width: 6px !important;
             background-color: #faf5ff !important;
         }
 
-        /* Podstawowy układ dla obrazków medycznych / schematów */
         .wnl-extracted-image {
             margin: 24px 0 !important;
             padding: 12px;
             background: #f8fafc;
             border-radius: 8px;
+            width: 100% !important;
+            box-sizing: border-box !important;
         }
     </style>
 </head>
@@ -169,11 +173,9 @@
             const parser = new DOMParser();
             const doc = parser.parseFromString(content, 'text/html');
             
-            // 1. Oczyszczenie wczytanego dokumentu z niepotrzebnych otoczek skryptu (jeśli są)
             let mainContent = doc.querySelector('#paper') ? doc.querySelector('#paper').innerHTML : doc.body.innerHTML;
             document.getElementById('contentArea').innerHTML = mainContent;
 
-            // 2. Generowanie spisu treści
             const tocList = document.getElementById('tocList');
             tocList.innerHTML = '';
             const headers = document.getElementById('contentArea').querySelectorAll('h1, h2, h3');
@@ -195,7 +197,6 @@
                 document.getElementById('toc-wrapper').style.display = 'none';
             }
 
-            // 3. Logika otwierania/zamykania przypisów
             setupInteractiveNotes();
         };
         reader.readAsText(file);
@@ -204,22 +205,23 @@
     function setupInteractiveNotes() {
         const contentArea = document.getElementById('contentArea');
         
-        // Wykorzystujemy Event Delegation - nasłuchujemy kliknięć w całym kontenerze
         contentArea.addEventListener('click', function(e) {
-            
-            // Szukamy najbliższego elementu, który jest markerem przypisu
             const marker = e.target.closest('.wnl-note-marker');
-            
             if (marker) {
-                // Pobieramy ID notatki z atrybutu (np. "note-1")
                 const targetId = marker.getAttribute('data-target-note');
                 if (!targetId) return;
 
                 const noteDiv = document.getElementById(targetId);
                 if (noteDiv) {
-                    // Przełączamy widoczność
                     const isExpanded = noteDiv.classList.contains('is-expanded');
                     
+                    // MAGIA POZYCJONOWANIA:
+                    // Zanim wyświetlimy notatkę, wyrywamy ją z obecnego miejsca w HTML 
+                    // i wklejamy DOKŁADNIE jako następny element po klikniętym znaczniku.
+                    if (!isExpanded) {
+                        marker.parentNode.insertBefore(noteDiv, marker.nextSibling);
+                    }
+
                     if (isExpanded) {
                         noteDiv.classList.remove('is-expanded');
                         marker.classList.remove('active');

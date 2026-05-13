@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Archive Reader</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; background: #f0f0f0; }
+        #controls { padding: 20px; background: #fff; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 100; }
+        #toc { background: #fafafa; padding: 10px; margin: 10px 0; border-radius: 8px; display: none; }
+        #viewer-container { 
+            max-width: 480px; 
+            margin: 20px auto; 
+            background: white; 
+            min-height: 80vh; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 15px;
+        }
+        iframe { width: 100%; border: none; height: 100vh; }
+    </style>
+</head>
+<body>
+
+<div id="controls">
+    <input type="file" id="fileInput" accept=".html">
+    <div id="toc"><strong>Spis treści:</strong><ul id="tocList"></ul></div>
+</div>
+
+<div id="viewer-container">
+    <div id="contentArea">Wybierz plik, aby rozpocząć czytanie...</div>
+</div>
+
+<script>
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const content = e.target.result;
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(content, 'text/html');
+            
+            // Generowanie spisu treści
+            const tocList = document.getElementById('tocList');
+            tocList.innerHTML = '';
+            const headers = doc.querySelectorAll('h1, h2, h3');
+            
+            if(headers.length > 0) {
+                document.getElementById('toc').style.display = 'block';
+                headers.forEach((h, index) => {
+                    const id = `heading-${index}`;
+                    h.setAttribute('id', id); // Dodajemy ID do skoku
+                    const li = document.createElement('li');
+                    li.innerHTML = `<a href="#${id}">${h.innerText}</a>`;
+                    tocList.appendChild(li);
+                });
+            }
+
+            // Renderowanie (uproszczone)
+            document.getElementById('contentArea').innerHTML = doc.body.innerHTML;
+        };
+        reader.readAsText(file);
+    });
+</script>
+</body>
+</html>

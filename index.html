@@ -4,33 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mobile Archive Reader</title>
+    <!-- Obsługa PWA z poprzedniego kroku -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <style>
         body { font-family: sans-serif; margin: 0; background: #f0f0f0; }
-        #controls { padding: 20px; background: #fff; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 100; }
-        #toc { background: #fafafa; padding: 10px; margin: 10px 0; border-radius: 8px; display: none; }
+        
+        /* Górny panel - trochę węższy i z cieniem */
+        #controls { 
+            padding: 15px; 
+            background: #fff; 
+            border-bottom: 1px solid #ddd; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        /* Zwijany panel spisu treści */
+        #toc-wrapper { display: none; margin-top: 10px; }
+        summary { font-weight: bold; cursor: pointer; padding: 5px 0; outline: none; }
+        
+        #toc { 
+            background: #fafafa; 
+            padding: 10px; 
+            margin-top: 10px; 
+            border-radius: 8px; 
+            max-height: 35vh; /* Max 35% wysokości ekranu */
+            overflow-y: auto; /* Własny pasek przewijania dla długich spisów */
+            border: 1px solid #eee;
+        }
+        #tocList { margin: 0; padding-left: 20px; font-size: 0.95em; line-height: 1.5; }
+        #tocList li { margin-bottom: 8px; }
+        
+        /* Główny kontener na tekst */
         #viewer-container { 
             max-width: 480px; 
-            margin: 20px auto; 
+            margin: 0 auto; 
             background: white; 
-            min-height: 80vh; 
+            min-height: 100vh; 
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            padding: 15px;
+            padding: 20px;
+            box-sizing: border-box;
         }
-        iframe { width: 100%; border: none; height: 100vh; }
+        
+        /* Sprawia, że zarchiwizowane obrazki nie rozsadzają ekranu w bok */
+        #contentArea img { max-width: 100%; height: auto; }
+        #contentArea { word-wrap: break-word; }
     </style>
 </head>
 <body>
 
 <div id="controls">
     <input type="file" id="fileInput" accept=".html">
-    <div id="toc"><strong>Spis treści:</strong><ul id="tocList"></ul></div>
+    
+    <!-- Nowy, zwijany spis treści -->
+    <details id="toc-wrapper">
+        <summary>Pokaż / Ukryj spis treści</summary>
+        <div id="toc">
+            <ul id="tocList"></ul>
+        </div>
+    </details>
 </div>
 
 <div id="viewer-container">
-    <div id="contentArea">Wybierz plik, aby rozpocząć czytanie...</div>
+    <div id="contentArea">Wybierz plik HTML, aby rozpocząć czytanie...</div>
 </div>
 
 <script>
+    // Rejestracja Service Workera dla aplikacji mobilnej (PWA)
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(err => console.log('Błąd SW:', err));
+    }
+
     document.getElementById('fileInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -41,23 +87,33 @@
             const parser = new DOMParser();
             const doc = parser.parseFromString(content, 'text/html');
             
-            // Generowanie spisu treści
             const tocList = document.getElementById('tocList');
             tocList.innerHTML = '';
             const headers = doc.querySelectorAll('h1, h2, h3');
             
             if(headers.length > 0) {
-                document.getElementById('toc').style.display = 'block';
+                // Pokazujemy nasz zwijany panel
+                document.getElementById('toc-wrapper').style.display = 'block';
+                
                 headers.forEach((h, index) => {
                     const id = `heading-${index}`;
-                    h.setAttribute('id', id); // Dodajemy ID do skoku
+                    h.setAttribute('id', id); 
+                    
                     const li = document.createElement('li');
-                    li.innerHTML = `<a href="#${id}">${h.innerText}</a>`;
+                    li.innerHTML = `<a href="#${id}" style="color: #0066cc; text-decoration: none;">${h.innerText}</a>`;
+                    
+                    // Magia UX: Po kliknięciu w link, spis treści sam się zwija
+                    li.querySelector('a').addEventListener('click', () => {
+                        document.getElementById('toc-wrapper').removeAttribute('open');
+                    });
+
                     tocList.appendChild(li);
                 });
+            } else {
+                document.getElementById('toc-wrapper').style.display = 'none';
             }
 
-            // Renderowanie (uproszczone)
+            // Wrzucamy całą zawartość dokumentu do readera
             document.getElementById('contentArea').innerHTML = doc.body.innerHTML;
         };
         reader.readAsText(file);

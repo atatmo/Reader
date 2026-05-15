@@ -9,7 +9,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <style>
         :root {
-            /* Czysty, natywny wygląd - usunięto szare tło */
             --surface-color: #ffffff;
             --text-main: #111827;
             --text-muted: #6b7280;
@@ -17,20 +16,20 @@
             --accent: #2563eb;
         }
 
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            margin: 0; 
-            background: var(--surface-color); 
-            color: var(--text-main);
-            line-height: 1.6;
-            -webkit-font-smoothing: antialiased;
+        /* TARCZA ANTY-SINGLEFILE: Bezwzględnie wymuszamy białe tło */
+        html, body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important; 
+            margin: 0 !important; 
+            background-color: #ffffff !important; 
+            color: var(--text-main) !important;
+            line-height: 1.6 !important;
+            -webkit-font-smoothing: antialiased !important;
         }
         
         /* =========================================
            NOWY INTERFEJS (UKRYTE MENU Z DOŁU)
            ========================================= */
 
-        /* Pływający przycisk (FAB) */
         #menu-btn {
             position: fixed;
             bottom: 24px;
@@ -52,7 +51,6 @@
         }
         #menu-btn:active { transform: scale(0.92); background: #1d4ed8; }
 
-        /* Przyciemnienie tła, gdy menu jest otwarte */
         #backdrop {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -67,11 +65,10 @@
             pointer-events: all;
         }
 
-        /* Menu wysuwane z dołu (Bottom Sheet) */
         #controls { 
             position: fixed;
             bottom: 0; left: 0; width: 100%;
-            background: var(--surface-color); 
+            background: #ffffff; 
             padding: 24px 20px 40px 20px; 
             box-sizing: border-box;
             border-radius: 24px 24px 0 0;
@@ -87,12 +84,12 @@
             transform: translateY(0);
         }
 
-        /* Wygląd wnętrza menu */
         .menu-header {
             font-weight: 600;
             font-size: 18px;
             margin-bottom: 16px;
             text-align: center;
+            color: #111827;
         }
         .file-input-wrapper {
             background: #f3f4f6;
@@ -110,7 +107,7 @@
         }
         #tocList { margin: 0; padding-left: 0; list-style: none; font-size: 16px; }
         #tocList li { margin-bottom: 14px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;}
-        #tocList a { color: var(--text-main); text-decoration: none; display: block; }
+        #tocList a { color: #111827; text-decoration: none; display: block; }
         
         /* =========================================
            CZYTNIK (EDGE-TO-EDGE)
@@ -119,22 +116,27 @@
         #viewer-container { 
             width: 100%; 
             min-height: 100vh; 
-            /* Tekst ma bezpieczny margines (16px), ale nie ma ograniczeń szerokości */
-            padding: 20px 16px 100px 16px;
-            box-sizing: border-box;
-            overflow-x: hidden; 
+            /* Bardzo delikatne marginesy dla samego tekstu, by wykorzystać potencjał ekranu */
+            padding: 12px 12px 100px 12px !important;
+            box-sizing: border-box !important;
+            overflow-x: hidden !important; 
+            background-color: #ffffff !important;
         }
         
-        #contentArea { word-wrap: break-word; font-size: 17px; }
+        #contentArea { 
+            word-wrap: break-word; 
+            font-size: 17px !important; 
+            background-color: #ffffff !important;
+        }
 
-        /* Agresywne rozpychanie obrazków na pełną szerokość ekranu (łamanie marginesów) */
+        /* OBRAZKI EDGE-TO-EDGE */
         .wnl-extracted-image, #contentArea > img {
-            margin: 32px -16px !important; /* -16px niweluje padding kontenera */
+            margin: 24px -12px !important; /* Zbijanie marginesów kontenera */
             padding: 0 !important;
             background: transparent !important;
             border-radius: 0 !important;
-            width: calc(100% + 32px) !important;
-            max-width: calc(100% + 32px) !important;
+            width: calc(100% + 24px) !important;
+            max-width: calc(100% + 24px) !important;
             box-sizing: border-box !important;
         }
         
@@ -145,7 +147,10 @@
             display: block;
         }
 
-        /* Notatki interaktywne */
+        /* =========================================
+           HIERARCHIA NOTATEK (EFEKT WGŁĘBIENIA)
+           ========================================= */
+
         .wnl-note-marker {
             cursor: pointer;
             background-color: #f3f4f6;
@@ -162,15 +167,23 @@
         .wnl-extracted-note {
             display: none !important; 
             opacity: 0;
-            width: 100% !important; 
+            
+            /* EDGE-TO-EDGE dla notatek */
+            width: calc(100% + 24px) !important; 
             box-sizing: border-box !important; 
-            margin: 16px 0 !important; 
-            padding: 16px !important;
-            border-radius: 12px !important;
-            background: #f8fafc;
-            border: 1px solid var(--border-color);
+            margin: 16px -12px !important; 
+            padding: 20px 16px 20px 16px !important;
+            border-radius: 0 !important; 
+            
+            /* EFEKT "POD" STRONĄ */
+            background: #f8fafc !important; /* Delikatne przyciemnienie */
+            box-shadow: inset 0px 6px 8px -4px rgba(0,0,0,0.08), inset 0px -6px 8px -4px rgba(0,0,0,0.08) !important;
+            border: none !important; /* Usuwamy stare, płaskie ramki */
+            border-left: 6px solid #3b82f6 !important; /* Mocny, kolorowy akcent z lewej */
+            
             clear: both !important;
         }
+        
         .wnl-extracted-note.is-expanded {
             display: block !important;
             opacity: 1;
@@ -182,8 +195,9 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Specjalny kolor paska dla Mnemotechniki */
         .wnl-extracted-note[data-category="mnemotechnika"] {
-            border-left: 4px solid #a855f7 !important;
+            border-left: 6px solid #a855f7 !important;
             background-color: #faf5ff !important;
         }
     </style>
@@ -191,7 +205,6 @@
 <body>
 
 <button id="menu-btn">📚</button>
-
 <div id="backdrop"></div>
 
 <div id="controls">
@@ -200,7 +213,7 @@
         <input type="file" id="fileInput" accept=".html">
     </div>
     <div id="toc-wrapper">
-        <div style="font-weight: 600; margin-bottom: 12px; color: var(--text-muted);">SPIS TREŚCI</div>
+        <div style="font-weight: 600; margin-bottom: 12px; color: #6b7280; font-size: 14px; letter-spacing: 0.5px;">SPIS TREŚCI</div>
         <div id="toc">
             <ul id="tocList"></ul>
         </div>
@@ -214,7 +227,6 @@
 </div>
 
 <script>
-    // Obsługa wysuwanego menu
     const menuBtn = document.getElementById('menu-btn');
     const controls = document.getElementById('controls');
     const backdrop = document.getElementById('backdrop');
@@ -227,7 +239,6 @@
     menuBtn.addEventListener('click', toggleMenu);
     backdrop.addEventListener('click', toggleMenu);
 
-    // Ładowanie pliku
     document.getElementById('fileInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -238,7 +249,6 @@
             const parser = new DOMParser();
             const doc = parser.parseFromString(content, 'text/html');
             
-            // Wstrzykiwanie oryginalnych stylów SingleFile
             const styles = doc.querySelectorAll('style');
             styles.forEach(styleNode => {
                 const newStyle = document.createElement('style');
@@ -246,14 +256,11 @@
                 document.head.appendChild(newStyle);
             });
 
-            // Wrzucanie treści
             let mainContent = doc.querySelector('#paper') ? doc.querySelector('#paper').innerHTML : doc.body.innerHTML;
             document.getElementById('contentArea').innerHTML = mainContent;
 
-            // Naprawa obrazków (ten sam świetny mechanizm co w poprzedniej wersji)
             restoreSingleFileImages(doc);
 
-            // Spis treści
             const tocList = document.getElementById('tocList');
             tocList.innerHTML = '';
             const headers = document.getElementById('contentArea').querySelectorAll('h1, h2, h3');
@@ -266,7 +273,6 @@
                     const li = document.createElement('li');
                     li.innerHTML = `<a href="#${id}">${h.innerText}</a>`;
                     
-                    // Po kliknięciu w link, skocz i zamknij menu automatycznie
                     li.querySelector('a').addEventListener('click', () => {
                         toggleMenu();
                     });
@@ -277,8 +283,6 @@
             }
 
             setupInteractiveNotes();
-            
-            // Po udanym wczytaniu pliku automatycznie schowaj menu, by pokazać treść
             toggleMenu();
         };
         reader.readAsText(file);

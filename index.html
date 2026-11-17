@@ -42,7 +42,7 @@
             --note-marker-active-text: #bfdbfe;
         }
 
-        /* TARCZA ANTY-SINGLEFILE: Wymuszamy nasze tło i kolory */
+        /* TARCZA ANTY-SINGLEFILE */
         html, body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important; 
             margin: 0 !important; 
@@ -115,14 +115,15 @@
             bottom: 0; left: 0; width: 100%;
             background: var(--surface-color); 
             color: var(--text-main);
-            padding: 20px 20px 32px 20px; 
+            padding: 14px 18px 26px 18px; 
             box-sizing: border-box;
             border-radius: 24px 24px 0 0;
-            box-shadow: 0 -10px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 -10px 25px rgba(0,0,0,0.18);
             z-index: 999; 
             transform: translateY(110%);
             transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-            max-height: 85vh;
+            height: 86vh;
+            max-height: 86vh;
             display: flex;
             flex-direction: column;
         }
@@ -135,75 +136,99 @@
             height: 5px;
             background: var(--border-color);
             border-radius: 3px;
-            margin: 0 auto 12px auto;
+            margin: 0 auto 10px auto;
             flex-shrink: 0;
         }
 
-        .menu-header {
-            font-weight: 600;
-            font-size: 18px;
-            margin-bottom: 16px;
-            text-align: center;
-            color: var(--text-main);
-            flex-shrink: 0;
-        }
-
-        /* PASEK NARZĘDZI W MENU (Czcionka, Motyw, Notatki) */
-        .toolbar-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
+        /* GÓRNY PASEK: PLIK + SZYBKIE OPCJE */
+        .top-bar-row {
+            display: flex;
             gap: 8px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             flex-shrink: 0;
+            align-items: center;
         }
+        .file-btn-label {
+            flex: 1;
+            background: var(--surface-elevated);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 9px 12px;
+            border-radius: 10px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #fileInput { display: none; }
+
         .tool-btn {
             background: var(--surface-elevated);
             color: var(--text-main);
             border: 1px solid var(--border-color);
-            padding: 10px 6px;
+            padding: 9px 11px;
             border-radius: 10px;
-            font-size: 14px;
+            font-size: 13.5px;
             font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
-            transition: background 0.15s;
         }
-        .tool-btn:active {
+        .tool-btn:active, .file-btn-label:active {
             filter: brightness(0.9);
         }
 
-        .file-input-wrapper {
+        /* PRZEŁĄCZNIK ZAKŁADEK W MENU (SPIS TREŚCI vs NOTATKI) */
+        .menu-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             background: var(--surface-elevated);
-            padding: 12px;
+            padding: 4px;
             border-radius: 12px;
-            margin-bottom: 16px;
-            border: 1px solid var(--border-color);
+            margin-bottom: 12px;
             flex-shrink: 0;
+            border: 1px solid var(--border-color);
         }
-        input[type="file"] { 
-            width: 100%; 
-            font-size: 14px; 
+        .menu-tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 8px 10px;
+            border-radius: 9px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .menu-tab-btn.active {
+            background: var(--surface-color);
             color: var(--text-main);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
         }
-        
-        /* NAPRAWIONY DISPLAY DLA TOC-WRAPPER */
-        #toc-wrapper { 
-            flex-grow: 1; 
-            display: none; /* Domyślnie ukryty, JS przełączy na flex */
-            overflow: hidden; 
-            flex-direction: column; 
+
+        /* WIDOKI ZAKŁADEK */
+        .tab-pane {
+            display: none;
+            flex-direction: column;
+            flex-grow: 1;
             min-height: 0;
+            overflow: hidden;
         }
-        
-        #tocSearch {
+        .tab-pane.active {
+            display: flex;
+        }
+
+        /* WSPÓLNE POLE WYSZUKIWANIA */
+        .search-input {
             width: 100%;
             box-sizing: border-box;
-            padding: 10px 12px;
-            margin-bottom: 12px;
-            border-radius: 8px;
+            padding: 9px 12px;
+            margin-bottom: 10px;
+            border-radius: 9px;
             border: 1px solid var(--border-color);
             background: var(--surface-elevated);
             color: var(--text-main);
@@ -211,19 +236,20 @@
             outline: none;
             flex-shrink: 0;
         }
-        #tocSearch:focus {
+        .search-input:focus {
             border-color: var(--accent);
         }
 
+        /* =========================================
+           ZAKŁADKA 1: SPIS TREŚCI
+           ========================================= */
         #toc { 
             overflow-y: auto; 
             flex-grow: 1;
-            padding-right: 6px;
+            padding-right: 4px;
         }
         #tocList { margin: 0; padding-left: 0; list-style: none; font-size: 15px; }
-        #tocList li { 
-            border-bottom: 1px solid var(--border-color); 
-        }
+        #tocList li { border-bottom: 1px solid var(--border-color); }
         #tocList a { 
             color: var(--text-main); 
             text-decoration: none; 
@@ -231,14 +257,160 @@
             padding: 10px 4px;
             line-height: 1.4;
         }
-        #tocList a:active {
-            background-color: var(--surface-elevated);
-        }
-        /* Hierarchia w spisie treści */
+        #tocList a:active { background-color: var(--surface-elevated); }
         .toc-h1 { font-weight: 700; }
         .toc-h2 { padding-left: 16px !important; font-weight: 500; font-size: 14px; }
         .toc-h3 { padding-left: 32px !important; color: var(--text-muted) !important; font-size: 13.5px; }
-        
+
+        /* =========================================
+           ZAKŁADKA 2: FILTRY I LISTA NOTATEK
+           ========================================= */
+        #noteCategoryChips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+            max-height: 86px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .category-chip {
+            background: var(--surface-elevated);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.15s ease;
+        }
+        .category-chip .chip-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .category-chip.active {
+            background: var(--accent);
+            color: #ffffff;
+            border-color: var(--accent);
+        }
+        .category-chip.active .chip-dot {
+            background: #ffffff !important;
+        }
+        .category-chip .chip-count {
+            font-size: 11px;
+            opacity: 0.85;
+            background: rgba(0,0,0,0.08);
+            padding: 1px 6px;
+            border-radius: 999px;
+        }
+        .category-chip.active .chip-count {
+            background: rgba(255,255,255,0.22);
+        }
+
+        .notes-toolbar-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        .hide-unmatched-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12.5px;
+            color: var(--text-muted);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .notes-actions-group {
+            display: flex;
+            gap: 6px;
+        }
+        .notes-action-btn {
+            background: var(--surface-elevated);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .notes-action-btn.primary {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        /* PRZEWIJANA LISTA KART NOTATEK */
+        #filteredNotesList {
+            overflow-y: auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 4px;
+        }
+
+        .note-list-card {
+            background: var(--surface-elevated);
+            border: 1px solid var(--border-color);
+            border-left: 5px solid #3b82f6;
+            border-radius: 10px;
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: transform 0.12s ease, background 0.15s ease;
+        }
+        .note-list-card:active {
+            transform: scale(0.98);
+        }
+        .note-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        .note-card-badge {
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            padding: 2px 7px;
+            border-radius: 6px;
+            background: rgba(59, 130, 246, 0.12);
+            color: var(--text-main);
+        }
+        .note-card-section {
+            font-size: 11px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 55%;
+        }
+        .note-card-preview {
+            font-size: 13px;
+            color: var(--text-main);
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
         /* =========================================
            CZYTNIK (EDGE-TO-EDGE)
            ========================================= */
@@ -259,7 +431,6 @@
             color: var(--text-main) !important;
         }
 
-        /* Wymuszenie czytelności w trybie ciemnym na elementach z SingleFile */
         [data-theme="dark"] #contentArea *:not(.wnl-note-marker):not(.wnl-extracted-note) {
             background-color: transparent !important;
             color: inherit !important;
@@ -293,7 +464,7 @@
         }
 
         /* =========================================
-           HIERARCHIA NOTATEK (EFEKT WGŁĘBIENIA)
+           ZNACZNIKI I ROZWIJANE NOTATKI W TEKŚCIE
            ========================================= */
 
         .wnl-note-marker {
@@ -301,13 +472,14 @@
             background-color: var(--note-marker-bg) !important;
             color: var(--text-main) !important;
             border: 1px solid var(--note-marker-border) !important;
+            border-left-width: 4px !important;
             border-radius: 6px;
             padding: 2px 8px !important;
             margin: 0 4px;
             font-weight: 500;
             user-select: none;
             display: inline-block; 
-            transition: all 0.15s ease;
+            transition: opacity 0.2s ease, transform 0.15s ease, background-color 0.15s ease;
         }
         .wnl-note-marker.active { 
             background-color: var(--note-marker-active-bg) !important; 
@@ -315,24 +487,27 @@
             color: var(--note-marker-active-text) !important;
         }
 
+        .wnl-note-marker.filter-dimmed {
+            opacity: 0.25 !important;
+            filter: grayscale(1);
+        }
+        .wnl-note-marker.filter-hidden {
+            display: none !important;
+        }
+
         .wnl-extracted-note {
             display: none !important; 
             opacity: 0;
-            
-            /* EDGE-TO-EDGE dla notatek */
             width: calc(100% + 24px) !important; 
             box-sizing: border-box !important; 
             margin: 16px -12px !important; 
-            padding: 20px 16px 20px 16px !important;
+            padding: 18px 16px !important;
             border-radius: 0 !important; 
-            
-            /* EFEKT "POD" STRONĄ */
             background: var(--note-bg) !important;
             color: var(--text-main) !important;
             box-shadow: inset 0px 6px 8px -4px rgba(0,0,0,0.08), inset 0px -6px 8px -4px rgba(0,0,0,0.08) !important;
             border: none !important;
             border-left: 6px solid #3b82f6 !important;
-            
             clear: both !important;
         }
         
@@ -341,24 +516,39 @@
             opacity: 1;
             animation: slideDown 0.2s ease-out forwards;
         }
+
+        /* Pulsowanie po skoku z listy notatek */
+        @keyframes highlightPulse {
+            0% { outline: 3px solid var(--accent); outline-offset: -3px; }
+            100% { outline: 3px solid transparent; outline-offset: 0px; }
+        }
+        .wnl-extracted-note.jump-highlight {
+            animation: highlightPulse 1.4s ease-out;
+        }
         
         @keyframes slideDown {
             from { opacity: 0; transform: translateY(-5px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Specjalny kolor paska dla Mnemotechniki */
-        .wnl-extracted-note[data-category="mnemotechnika"] {
-            border-left: 6px solid #a855f7 !important;
-            background-color: #faf5ff !important;
+        /* KOLORYSTYKA KATEGORII NOTATEK */
+        .wnl-extracted-note[data-resolved-cat="egzamin"], .note-list-card[data-resolved-cat="egzamin"], .wnl-note-marker[data-resolved-cat="egzamin"] {
+            border-left-color: #ef4444 !important;
         }
-        [data-theme="dark"] .wnl-extracted-note[data-category="mnemotechnika"] {
-            background-color: #2e1065 !important;
+        .wnl-extracted-note[data-resolved-cat="specjalistyczna"], .note-list-card[data-resolved-cat="specjalistyczna"], .wnl-note-marker[data-resolved-cat="specjalistyczna"] {
+            border-left-color: #0ea5e9 !important;
+        }
+        .wnl-extracted-note[data-resolved-cat="mnemotechnika"], .note-list-card[data-resolved-cat="mnemotechnika"], .wnl-note-marker[data-resolved-cat="mnemotechnika"] {
+            border-left-color: #a855f7 !important;
+        }
+        .wnl-extracted-note[data-resolved-cat="kliniczna"], .note-list-card[data-resolved-cat="kliniczna"], .wnl-note-marker[data-resolved-cat="kliniczna"] {
+            border-left-color: #10b981 !important;
+        }
+        .wnl-extracted-note[data-resolved-cat="uwaga"], .note-list-card[data-resolved-cat="uwaga"], .wnl-note-marker[data-resolved-cat="uwaga"] {
+            border-left-color: #f59e0b !important;
         }
 
-        /* =========================================
-           LIGHTBOX (POWIĘKSZANIE OBRAZKÓW)
-           ========================================= */
+        /* LIGHTBOX */
         #lightbox {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -370,25 +560,20 @@
             overflow: auto;
             touch-action: pinch-zoom pan-x pan-y;
         }
-        #lightbox.active {
-            display: flex;
-        }
+        #lightbox.active { display: flex; }
         #lightbox img {
             max-width: 96%;
             max-height: 92vh;
             object-fit: contain;
-            transition: transform 0.2s ease;
         }
         #lightbox-close {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 20px; right: 20px;
             background: rgba(255,255,255,0.2);
             color: white;
             border: none;
             border-radius: 50%;
-            width: 44px;
-            height: 44px;
+            width: 44px; height: 44px;
             font-size: 22px;
             cursor: pointer;
             z-index: 2001;
@@ -404,24 +589,53 @@
 
 <div id="controls">
     <div class="menu-drag-handle"></div>
-    <div class="menu-header">Opcje czytnika</div>
 
-    <div class="toolbar-grid">
+    <!-- PASEK PLIKU I WYGLĄDU -->
+    <div class="top-bar-row">
+        <label class="file-btn-label" for="fileInput" id="fileLabel">📂 Wczytaj plik .html</label>
+        <input type="file" id="fileInput" accept=".html,.htm">
         <button class="tool-btn" id="btnFontDec" title="Zmniejsz czcionkę">A−</button>
         <button class="tool-btn" id="btnFontInc" title="Zwiększ czcionkę">A+</button>
-        <button class="tool-btn" id="btnTheme" title="Zmień motyw">🌓 Motyw</button>
-        <button class="tool-btn" id="btnToggleNotes" title="Rozwiń/Zwiń wszystkie notatki">📝 Notatki</button>
+        <button class="tool-btn" id="btnTheme" title="Zmień motyw">🌓</button>
     </div>
 
-    <div class="file-input-wrapper">
-        <input type="file" id="fileInput" accept=".html,.htm">
+    <!-- PRZEŁĄCZNIK ZAKŁADEK -->
+    <div class="menu-tabs">
+        <button class="menu-tab-btn active" data-tab="tab-toc">📑 Spis treści</button>
+        <button class="menu-tab-btn" data-tab="tab-notes">📝 Baza notatek (<span id="tabNotesCount">0</span>)</button>
     </div>
 
-    <div id="toc-wrapper">
-        <div style="font-weight: 600; margin-bottom: 8px; color: var(--text-muted); font-size: 13px; letter-spacing: 0.5px;">SPIS TREŚCI</div>
-        <input type="text" id="tocSearch" placeholder="Szukaj rozdziału...">
+    <!-- ZAKŁADKA 1: SPIS TREŚCI -->
+    <div id="tab-toc" class="tab-pane active">
+        <input type="text" id="tocSearch" class="search-input" placeholder="Szukaj rozdziału...">
         <div id="toc">
-            <ul id="tocList"></ul>
+            <ul id="tocList">
+                <li style="color: var(--text-muted); text-align: center; padding: 24px 0; border: none;">Brak wczytanego spisu treści.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ZAKŁADKA 2: FILTROWANIE I LISTA NOTATEK -->
+    <div id="tab-notes" class="tab-pane">
+        <input type="text" id="noteSearchInput" class="search-input" placeholder="Szukaj w notatkach (np. lek, objaw, dawka)...">
+
+        <!-- Pigułki kategorii (Wiedza do egzaminu, Specjalistyczna, Mnemotechnika itd.) -->
+        <div id="noteCategoryChips"></div>
+
+        <div class="notes-toolbar-row">
+            <label class="hide-unmatched-label">
+                <input type="checkbox" id="chkHideUnmatched">
+                Ukryj odrzucone w tekście
+            </label>
+            <div class="notes-actions-group">
+                <button class="notes-action-btn primary" id="btnExpandFiltered">Rozwiń w tekście</button>
+                <button class="notes-action-btn" id="btnCollapseAll">Zwiń wszystkie</button>
+            </div>
+        </div>
+
+        <!-- Lista przefiltrowanych notatek z nawigacją po kliknięciu -->
+        <div id="filteredNotesList">
+            <div style="color: var(--text-muted); text-align: center; padding: 24px 0;">Wczytaj plik, aby zobaczyć listę notatek.</div>
         </div>
     </div>
 </div>
@@ -434,7 +648,7 @@
     </div>
 </div>
 
-<!-- Lightbox do podglądu obrazków -->
+<!-- Lightbox -->
 <div id="lightbox">
     <button id="lightbox-close">✕</button>
     <img id="lightbox-img" src="" alt="Powiększony obraz">
@@ -445,13 +659,58 @@
     const controls = document.getElementById('controls');
     const backdrop = document.getElementById('backdrop');
     const contentArea = document.getElementById('contentArea');
-    const tocWrapper = document.getElementById('toc-wrapper');
     const tocList = document.getElementById('tocList');
     const tocSearch = document.getElementById('tocSearch');
     const progressBar = document.getElementById('progress-bar');
 
+    const noteSearchInput = document.getElementById('noteSearchInput');
+    const noteCategoryChips = document.getElementById('noteCategoryChips');
+    const chkHideUnmatched = document.getElementById('chkHideUnmatched');
+    const filteredNotesList = document.getElementById('filteredNotesList');
+    const tabNotesCount = document.getElementById('tabNotesCount');
+
+    // Słownik rozpoznawanych kategorii i ich stylów
+    const CATEGORY_DEFINITIONS = {
+        egzamin: {
+            label: '🎯 Wiedza do egzaminu',
+            color: '#ef4444',
+            keywords: ['egzamin', 'wiedza do egzaminu', 'lek', 'ldk', 'pes', 'pytanie egzaminacyjne', 'pewniak', 'do zapamiętania', 'zapamiętaj', 'kluczowe', 'must know']
+        },
+        specjalistyczna: {
+            label: '🔬 Wiedza specjalistyczna',
+            color: '#0ea5e9',
+            keywords: ['specjalistyczn', 'wiedza specjalistyczna', 'zaawansowan', 'dla chętnych', 'rozszerzen', 'dodatkow', 'szczegół', 'ciekawostk', 'ponadprogram']
+        },
+        mnemotechnika: {
+            label: '🧠 Mnemotechnika',
+            color: '#a855f7',
+            keywords: ['mnemo', 'skojarzen', 'wierszyk', 'akronim', 'skrót']
+        },
+        kliniczna: {
+            label: '🩺 Praktyka kliniczna',
+            color: '#10b981',
+            keywords: ['kliniczn', 'praktyk', 'w praktyce', 'dyżur', 'pacjent', 'przypadek', 'wskazówka']
+        },
+        uwaga: {
+            label: '⚠️ Pułapka / Uwaga',
+            color: '#f59e0b',
+            keywords: ['pułapk', 'uwaga', 'błąd', 'ostrożnie', 'czerwona flaga', 'red flag', 'kontrowersj']
+        },
+        ogolne: {
+            label: '📌 Przypis ogólny',
+            color: '#3b82f6',
+            keywords: []
+        }
+    };
+
+    // Stan filtrów (można wybrać ALL albo zestaw kilku kategorii naraz)
+    let selectedCategories = new Set(['ALL']);
+    let activeNoteQuery = '';
+    let hideUnmatchedMarkers = false;
+    let indexedNotes = []; // Tablica obiektów wszystkich notatek w dokumencie
+
     // =========================================
-    // 1. ZARZĄDZANIE MENU I USTAWIENIAMI
+    // 1. MENU, ZAKŁADKI, MOTYW I CZCIONKA
     // =========================================
     function toggleMenu(forceState) {
         const isOpen = typeof forceState === 'boolean' ? forceState : !controls.classList.contains('open');
@@ -462,7 +721,16 @@
     menuBtn.addEventListener('click', () => toggleMenu());
     backdrop.addEventListener('click', () => toggleMenu(false));
 
-    // Rozmiar czcionki i motyw z zapisem w localStorage
+    // Przełączanie zakładek w menu (Spis treści / Baza notatek)
+    document.querySelectorAll('.menu-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.menu-tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.tab).classList.add('active');
+        });
+    });
+
     let currentFontSize = parseInt(localStorage.getItem('readerFontSize')) || 17;
     let currentTheme = localStorage.getItem('readerTheme') || 'light';
 
@@ -494,31 +762,6 @@
         applyPreferences();
     });
 
-    // Globalne rozwijanie/zwijanie wszystkich notatek
-    let allNotesExpanded = false;
-    document.getElementById('btnToggleNotes').addEventListener('click', () => {
-        const markers = contentArea.querySelectorAll('.wnl-note-marker');
-        if (markers.length === 0) return;
-
-        allNotesExpanded = !allNotesExpanded;
-        markers.forEach(marker => {
-            const targetId = marker.getAttribute('data-target-note');
-            const noteDiv = targetId ? document.getElementById(targetId) : null;
-            if (noteDiv) {
-                if (allNotesExpanded) {
-                    marker.parentNode.insertBefore(noteDiv, marker.nextSibling);
-                    noteDiv.classList.add('is-expanded');
-                    marker.classList.add('active');
-                } else {
-                    noteDiv.classList.remove('is-expanded');
-                    marker.classList.remove('active');
-                }
-            }
-        });
-        toggleMenu(false);
-    });
-
-    // Pasek postępu czytania
     window.addEventListener('scroll', () => {
         const scrollTop = window.scrollY || document.documentElement.scrollTop;
         const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
@@ -527,11 +770,313 @@
     }, { passive: true });
 
     // =========================================
-    // 2. WCZYTYWANIE PLIKU HTML (NAPRAWIONE)
+    // 2. INTELIGENTNA KLASYFIKACJA I INDEKSOWANIE NOTATEK
+    // =========================================
+    function detectNoteCategory(noteDiv, marker) {
+        // 1. Sprawdzenie jawnych atrybutów data-category / data-type / class
+        const rawAttr = [
+            noteDiv.getAttribute('data-category'),
+            noteDiv.getAttribute('data-type'),
+            marker.getAttribute('data-category'),
+            marker.getAttribute('title'),
+            noteDiv.className,
+            marker.className
+        ].filter(Boolean).join(' ').toLowerCase();
+
+        // 2. Pobranie pierwszych 120 znaków notatki oraz tekstu znacznika
+        const headerEl = noteDiv.querySelector('strong, b, h1, h2, h3, h4, h5, .note-title, .title');
+        const headerText = headerEl ? headerEl.textContent.toLowerCase() : '';
+        const startText = noteDiv.textContent.trim().slice(0, 120).toLowerCase();
+        const markerText = marker.textContent.trim().toLowerCase();
+
+        const combinedSample = `${rawAttr} ${markerText} ${headerText} ${startText}`;
+
+        for (const [catKey, def] of Object.entries(CATEGORY_DEFINITIONS)) {
+            if (catKey === 'ogolne') continue;
+            if (def.keywords.some(kw => combinedSample.includes(kw))) {
+                return catKey;
+            }
+        }
+
+        // Jeśli w data-category jest niestandardowa nazwa, której nie ma w słowniku
+        const customCat = (noteDiv.getAttribute('data-category') || marker.getAttribute('data-category') || '').trim().toLowerCase();
+        if (customCat) {
+            if (!CATEGORY_DEFINITIONS[customCat]) {
+                CATEGORY_DEFINITIONS[customCat] = {
+                    label: '🏷️ ' + customCat.charAt(0).toUpperCase() + customCat.slice(1),
+                    color: '#6366f1',
+                    keywords: []
+                };
+            }
+            return customCat;
+        }
+
+        return 'ogolne';
+    }
+
+    // Znajduje najbliższy nagłówek rozdziału nad znacznikiem notatki
+    function findNearestHeadingText(element) {
+        const headers = Array.from(contentArea.querySelectorAll('h1, h2, h3'));
+        let lastHeader = 'Początek dokumentu';
+        for (const h of headers) {
+            if (h.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING) {
+                lastHeader = h.textContent.trim();
+            } else {
+                break;
+            }
+        }
+        return lastHeader;
+    }
+
+    function initNotesFilterSystem() {
+        selectedCategories = new Set(['ALL']);
+        activeNoteQuery = '';
+        noteSearchInput.value = '';
+        noteCategoryChips.innerHTML = '';
+        indexedNotes = [];
+
+        const markers = contentArea.querySelectorAll('.wnl-note-marker');
+        const categoryCounts = { ALL: 0 };
+
+        markers.forEach((marker, idx) => {
+            const targetId = marker.getAttribute('data-target-note');
+            const noteDiv = targetId ? document.getElementById(targetId) : null;
+            if (!noteDiv) return;
+
+            const catKey = detectNoteCategory(noteDiv, marker);
+            marker.setAttribute('data-resolved-cat', catKey);
+            noteDiv.setAttribute('data-resolved-cat', catKey);
+
+            const cleanPreview = noteDiv.textContent.replace(/\s+/g, ' ').trim();
+            const sectionTitle = findNearestHeadingText(marker);
+
+            indexedNotes.push({
+                index: idx,
+                marker,
+                noteDiv,
+                catKey,
+                sectionTitle,
+                previewText: cleanPreview,
+                searchHaystack: `${marker.textContent} ${cleanPreview} ${sectionTitle}`.toLowerCase()
+            });
+
+            categoryCounts.ALL += 1;
+            categoryCounts[catKey] = (categoryCounts[catKey] || 0) + 1;
+        });
+
+        tabNotesCount.textContent = categoryCounts.ALL;
+
+        if (categoryCounts.ALL === 0) {
+            filteredNotesList.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 24px 0;">W tym pliku nie wykryto żadnych notatek (.wnl-note-marker).</div>';
+            return;
+        }
+
+        // Pigułka "Wszystkie"
+        createCategoryChip('ALL', 'Wszystkie', '#2563eb', categoryCounts.ALL);
+
+        // Kolejność priorytetowa pigułek (Egzamin i Specjalistyczna na początku)
+        const priorityOrder = ['egzamin', 'specjalistyczna', 'mnemotechnika', 'kliniczna', 'uwaga', 'ogolne'];
+        const allDetectedKeys = Object.keys(categoryCounts).filter(k => k !== 'ALL');
+        allDetectedKeys.sort((a, b) => {
+            const idxA = priorityOrder.indexOf(a);
+            const idxB = priorityOrder.indexOf(b);
+            if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+            if (idxA !== -1) return -1;
+            if (idxB !== -1) return 1;
+            return a.localeCompare(b);
+        });
+
+        allDetectedKeys.forEach(catKey => {
+            const def = CATEGORY_DEFINITIONS[catKey] || { label: catKey, color: '#3b82f6' };
+            createCategoryChip(catKey, def.label, def.color, categoryCounts[catKey]);
+        });
+
+        applyNoteFilters();
+    }
+
+    function createCategoryChip(catKey, label, color, count) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'category-chip' + (selectedCategories.has(catKey) ? ' active' : '');
+        btn.dataset.category = catKey;
+
+        if (catKey !== 'ALL') {
+            const dot = document.createElement('span');
+            dot.className = 'chip-dot';
+            dot.style.backgroundColor = color;
+            btn.appendChild(dot);
+        }
+
+        const textSpan = document.createElement('span');
+        textSpan.textContent = label;
+
+        const countSpan = document.createElement('span');
+        countSpan.className = 'chip-count';
+        countSpan.textContent = count;
+
+        btn.appendChild(textSpan);
+        btn.appendChild(countSpan);
+
+        // Obsługa wielokrotnego wyboru kategorii (Multi-select)
+        btn.addEventListener('click', () => {
+            if (catKey === 'ALL') {
+                selectedCategories.clear();
+                selectedCategories.add('ALL');
+            } else {
+                selectedCategories.delete('ALL');
+                if (selectedCategories.has(catKey)) {
+                    selectedCategories.delete(catKey);
+                } else {
+                    selectedCategories.add(catKey);
+                }
+                if (selectedCategories.size === 0) {
+                    selectedCategories.add('ALL');
+                }
+            }
+
+            noteCategoryChips.querySelectorAll('.category-chip').forEach(chip => {
+                chip.classList.toggle('active', selectedCategories.has(chip.dataset.category));
+            });
+
+            applyNoteFilters();
+        });
+
+        noteCategoryChips.appendChild(btn);
+    }
+
+    function doesNoteMatch(item) {
+        const catMatch = selectedCategories.has('ALL') || selectedCategories.has(item.catKey);
+        if (!catMatch) return false;
+
+        if (activeNoteQuery.length > 0 && !item.searchHaystack.includes(activeNoteQuery)) {
+            return false;
+        }
+        return true;
+    }
+
+    // Aktualizuje zarówno znaczniki w tekście, jak i listę kart w menu
+    function applyNoteFilters() {
+        filteredNotesList.innerHTML = '';
+        let matchedItems = [];
+
+        indexedNotes.forEach(item => {
+            const isMatch = doesNoteMatch(item);
+
+            if (isMatch) {
+                matchedItems.push(item);
+                item.marker.classList.remove('filter-dimmed', 'filter-hidden');
+            } else {
+                item.noteDiv.classList.remove('is-expanded');
+                item.marker.classList.remove('active');
+
+                if (hideUnmatchedMarkers) {
+                    item.marker.classList.add('filter-hidden');
+                    item.marker.classList.remove('filter-dimmed');
+                } else {
+                    item.marker.classList.add('filter-dimmed');
+                    item.marker.classList.remove('filter-hidden');
+                }
+            }
+        });
+
+        tabNotesCount.textContent = `${matchedItems.length}/${indexedNotes.length}`;
+
+        if (matchedItems.length === 0) {
+            filteredNotesList.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 24px 0;">Brak notatek pasujących do wybranych filtrów.</div>';
+            return;
+        }
+
+        // Renderowanie kart na liście z nawigacją do tekstu
+        const fragment = document.createDocumentFragment();
+        matchedItems.forEach(item => {
+            const def = CATEGORY_DEFINITIONS[item.catKey] || CATEGORY_DEFINITIONS.ogolne;
+            const card = document.createElement('div');
+            card.className = 'note-list-card';
+            card.setAttribute('data-resolved-cat', item.catKey);
+
+            const header = document.createElement('div');
+            header.className = 'note-card-header';
+
+            const badge = document.createElement('span');
+            badge.className = 'note-card-badge';
+            badge.textContent = `${def.label} (${item.marker.textContent.trim()})`;
+
+            const section = document.createElement('span');
+            section.className = 'note-card-section';
+            section.textContent = item.sectionTitle;
+
+            header.appendChild(badge);
+            header.appendChild(section);
+
+            const preview = document.createElement('div');
+            preview.className = 'note-card-preview';
+            preview.textContent = item.previewText;
+
+            card.appendChild(header);
+            card.appendChild(preview);
+
+            // KLIKNIĘCIE KARTY: Zamyka menu, rozwija notatkę w tekście i przewija do niej
+            card.addEventListener('click', () => {
+                toggleMenu(false);
+
+                // Upewniamy się, że notatka jest umieszczona pod znacznikiem i rozwinięta
+                item.marker.parentNode.insertBefore(item.noteDiv, item.marker.nextSibling);
+                item.noteDiv.classList.add('is-expanded');
+                item.marker.classList.add('active');
+
+                // Płynny skok do notatki i podświetlenie
+                setTimeout(() => {
+                    item.marker.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    item.noteDiv.classList.remove('jump-highlight');
+                    void item.noteDiv.offsetWidth; // restart animacji
+                    item.noteDiv.classList.add('jump-highlight');
+                }, 120);
+            });
+
+            fragment.appendChild(card);
+        });
+
+        filteredNotesList.appendChild(fragment);
+    }
+
+    noteSearchInput.addEventListener('input', function() {
+        activeNoteQuery = this.value.toLowerCase().trim();
+        applyNoteFilters();
+    });
+
+    chkHideUnmatched.addEventListener('change', function() {
+        hideUnmatchedMarkers = this.checked;
+        applyNoteFilters();
+    });
+
+    document.getElementById('btnExpandFiltered').addEventListener('click', () => {
+        indexedNotes.forEach(item => {
+            if (doesNoteMatch(item)) {
+                item.marker.parentNode.insertBefore(item.noteDiv, item.marker.nextSibling);
+                item.noteDiv.classList.add('is-expanded');
+                item.marker.classList.add('active');
+            } else {
+                item.noteDiv.classList.remove('is-expanded');
+                item.marker.classList.remove('active');
+            }
+        });
+        toggleMenu(false);
+    });
+
+    document.getElementById('btnCollapseAll').addEventListener('click', () => {
+        contentArea.querySelectorAll('.wnl-extracted-note.is-expanded').forEach(n => n.classList.remove('is-expanded'));
+        contentArea.querySelectorAll('.wnl-note-marker.active').forEach(m => m.classList.remove('active'));
+        toggleMenu(false);
+    });
+
+    // =========================================
+    // 3. WCZYTYWANIE PLIKU HTML
     // =========================================
     document.getElementById('fileInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
+
+        document.getElementById('fileLabel').textContent = '📄 ' + file.name;
 
         const reader = new FileReader();
         reader.onload = function(event) {
@@ -539,7 +1084,6 @@
             const parser = new DOMParser();
             const doc = parser.parseFromString(content, 'text/html');
             
-            // NAPRAWA: Usuwamy style z poprzednio wczytanego pliku przed dodaniem nowych
             document.querySelectorAll('style[data-injected-style="true"]').forEach(el => el.remove());
 
             const styles = doc.querySelectorAll('style');
@@ -550,29 +1094,22 @@
                 document.head.appendChild(newStyle);
             });
 
-            // Wstrzyknięcie głównej treści
             const paper = doc.querySelector('#paper');
             contentArea.innerHTML = paper ? paper.innerHTML : doc.body.innerHTML;
 
-            // Przywrócenie obrazków SingleFile
             restoreSingleFileImages(doc);
-
-            // Budowanie Spisu Treści (TOC)
             buildTableOfContents();
+            initNotesFilterSystem();
 
-            // Przewijamy na samą górę nowego dokumentu i zamykamy menu
             window.scrollTo({ top: 0, behavior: 'instant' });
-            allNotesExpanded = false;
             toggleMenu(false);
         };
         reader.readAsText(file);
-        
-        // Reset wartości inputa, by umożliwić ponowne wybranie tego samego pliku
         e.target.value = '';
     });
 
     // =========================================
-    // 3. SPIS TREŚCI + FILTROWANIE
+    // 4. SPIS TREŚCI
     // =========================================
     function buildTableOfContents() {
         tocList.innerHTML = '';
@@ -580,7 +1117,6 @@
         const headers = contentArea.querySelectorAll('h1, h2, h3');
         
         if (headers.length > 0) {
-            tocWrapper.style.display = 'flex';
             headers.forEach((h, index) => {
                 const text = h.textContent.trim();
                 if (!text) return;
@@ -607,11 +1143,10 @@
                 tocList.appendChild(li);
             });
         } else {
-            tocWrapper.style.display = 'none';
+            tocList.innerHTML = '<li style="color: var(--text-muted); text-align: center; padding: 24px 0; border: none;">Brak nagłówków H1-H3 w tym pliku.</li>';
         }
     }
 
-    // Wyszukiwarka w spisie treści
     tocSearch.addEventListener('input', function() {
         const query = this.value.toLowerCase().trim();
         const items = tocList.querySelectorAll('li');
@@ -622,7 +1157,7 @@
     });
 
     // =========================================
-    // 4. OBRAZKI SINGLEFILE
+    // 5. OBRAZKI SINGLEFILE
     // =========================================
     function restoreSingleFileImages(doc) {
         const styles = doc.querySelectorAll('style');
@@ -673,15 +1208,13 @@
     }
 
     // =========================================
-    // 5. OBSŁUGA NOTATEK I POWIĘKSZANIA OBRAZKÓW
-    //    (Rejestrowana raz - naprawia duplikację zdarzeń!)
+    // 6. INTERAKCJA W TEKŚCIE (NOTATKI + LIGHTBOX)
     // =========================================
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightbox-img');
     const lightboxClose = document.getElementById('lightbox-close');
 
     contentArea.addEventListener('click', function(e) {
-        // 1. Kliknięcie w znacznik notatki
         const marker = e.target.closest('.wnl-note-marker');
         if (marker) {
             const targetId = marker.getAttribute('data-target-note');
@@ -690,7 +1223,6 @@
             const noteDiv = document.getElementById(targetId);
             if (noteDiv) {
                 const isExpanded = noteDiv.classList.contains('is-expanded');
-                
                 if (!isExpanded) {
                     marker.parentNode.insertBefore(noteDiv, marker.nextSibling);
                     noteDiv.classList.add('is-expanded');
@@ -703,7 +1235,6 @@
             return;
         }
 
-        // 2. Kliknięcie w obrazek (otwiera Lightbox)
         const clickedImg = e.target.closest('img');
         if (clickedImg && clickedImg.src) {
             lightboxImg.src = clickedImg.src;
@@ -711,7 +1242,6 @@
         }
     });
 
-    // Zamykanie Lightboxa
     function closeLightbox() {
         lightbox.classList.remove('active');
         lightboxImg.src = '';

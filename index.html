@@ -10,24 +10,67 @@
     <style>
         :root {
             --surface-color: #ffffff;
+            --surface-elevated: #f3f4f6;
             --text-main: #111827;
             --text-muted: #6b7280;
             --border-color: #e5e7eb;
             --accent: #2563eb;
+            --accent-active: #1d4ed8;
+            --note-bg: #f8fafc;
+            --note-marker-bg: #f3f4f6;
+            --note-marker-border: #d1d5db;
+            --note-marker-active-bg: #dbeafe;
+            --note-marker-active-border: #93c5fd;
+            --note-marker-active-text: #1e40af;
+            --reader-font-size: 17px;
         }
 
-        /* TARCZA ANTY-SINGLEFILE: Bezwzględnie wymuszamy białe tło */
+        /* TRYB CIEMNY */
+        [data-theme="dark"] {
+            --surface-color: #111827;
+            --surface-elevated: #1f2937;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --border-color: #374151;
+            --accent: #3b82f6;
+            --accent-active: #2563eb;
+            --note-bg: #1e293b;
+            --note-marker-bg: #374151;
+            --note-marker-border: #4b5563;
+            --note-marker-active-bg: #1e3a8a;
+            --note-marker-active-border: #3b82f6;
+            --note-marker-active-text: #bfdbfe;
+        }
+
+        /* TARCZA ANTY-SINGLEFILE: Wymuszamy nasze tło i kolory */
         html, body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important; 
             margin: 0 !important; 
-            background-color: #ffffff !important; 
+            background-color: var(--surface-color) !important; 
             color: var(--text-main) !important;
             line-height: 1.6 !important;
             -webkit-font-smoothing: antialiased !important;
+            scroll-behavior: smooth;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        /* PASEK POSTĘPU CZYTANIA */
+        #progress-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: transparent;
+            z-index: 1001;
+            pointer-events: none;
+        }
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--accent);
+            transition: width 0.1s ease-out;
         }
         
         /* =========================================
-           NOWY INTERFEJS (UKRYTE MENU Z DOŁU)
+           INTERFEJS (UKRYTE MENU Z DOŁU)
            ========================================= */
 
         #menu-btn {
@@ -48,8 +91,9 @@
             align-items: center;
             justify-content: center;
             transition: transform 0.2s ease, background 0.2s;
+            -webkit-tap-highlight-color: transparent;
         }
-        #menu-btn:active { transform: scale(0.92); background: #1d4ed8; }
+        #menu-btn:active { transform: scale(0.92); background: var(--accent-active); }
 
         #backdrop {
             position: fixed;
@@ -59,6 +103,7 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease;
+            backdrop-filter: blur(2px);
         }
         #backdrop.open {
             opacity: 1;
@@ -68,11 +113,12 @@
         #controls { 
             position: fixed;
             bottom: 0; left: 0; width: 100%;
-            background: #ffffff; 
-            padding: 24px 20px 40px 20px; 
+            background: var(--surface-color); 
+            color: var(--text-main);
+            padding: 20px 20px 32px 20px; 
             box-sizing: border-box;
             border-radius: 24px 24px 0 0;
-            box-shadow: 0 -10px 25px rgba(0,0,0,0.1);
+            box-shadow: 0 -10px 25px rgba(0,0,0,0.15);
             z-index: 999; 
             transform: translateY(110%);
             transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
@@ -84,30 +130,114 @@
             transform: translateY(0);
         }
 
+        .menu-drag-handle {
+            width: 40px;
+            height: 5px;
+            background: var(--border-color);
+            border-radius: 3px;
+            margin: 0 auto 12px auto;
+            flex-shrink: 0;
+        }
+
         .menu-header {
             font-weight: 600;
             font-size: 18px;
             margin-bottom: 16px;
             text-align: center;
-            color: #111827;
+            color: var(--text-main);
+            flex-shrink: 0;
         }
+
+        /* PASEK NARZĘDZI W MENU (Czcionka, Motyw, Notatki) */
+        .toolbar-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+        .tool-btn {
+            background: var(--surface-elevated);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 10px 6px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: background 0.15s;
+        }
+        .tool-btn:active {
+            filter: brightness(0.9);
+        }
+
         .file-input-wrapper {
-            background: #f3f4f6;
+            background: var(--surface-elevated);
             padding: 12px;
             border-radius: 12px;
             margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+            flex-shrink: 0;
         }
-        input[type="file"] { width: 100%; font-size: 14px; }
+        input[type="file"] { 
+            width: 100%; 
+            font-size: 14px; 
+            color: var(--text-main);
+        }
         
-        #toc-wrapper { flex-grow: 1; display: none; overflow: hidden; display: flex; flex-direction: column; }
+        /* NAPRAWIONY DISPLAY DLA TOC-WRAPPER */
+        #toc-wrapper { 
+            flex-grow: 1; 
+            display: none; /* Domyślnie ukryty, JS przełączy na flex */
+            overflow: hidden; 
+            flex-direction: column; 
+            min-height: 0;
+        }
+        
+        #tocSearch {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--surface-elevated);
+            color: var(--text-main);
+            font-size: 14px;
+            outline: none;
+            flex-shrink: 0;
+        }
+        #tocSearch:focus {
+            border-color: var(--accent);
+        }
+
         #toc { 
             overflow-y: auto; 
             flex-grow: 1;
-            padding-right: 10px;
+            padding-right: 6px;
         }
-        #tocList { margin: 0; padding-left: 0; list-style: none; font-size: 16px; }
-        #tocList li { margin-bottom: 14px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;}
-        #tocList a { color: #111827; text-decoration: none; display: block; }
+        #tocList { margin: 0; padding-left: 0; list-style: none; font-size: 15px; }
+        #tocList li { 
+            border-bottom: 1px solid var(--border-color); 
+        }
+        #tocList a { 
+            color: var(--text-main); 
+            text-decoration: none; 
+            display: block; 
+            padding: 10px 4px;
+            line-height: 1.4;
+        }
+        #tocList a:active {
+            background-color: var(--surface-elevated);
+        }
+        /* Hierarchia w spisie treści */
+        .toc-h1 { font-weight: 700; }
+        .toc-h2 { padding-left: 16px !important; font-weight: 500; font-size: 14px; }
+        .toc-h3 { padding-left: 32px !important; color: var(--text-muted) !important; font-size: 13.5px; }
         
         /* =========================================
            CZYTNIK (EDGE-TO-EDGE)
@@ -116,22 +246,35 @@
         #viewer-container { 
             width: 100%; 
             min-height: 100vh; 
-            /* Bardzo delikatne marginesy dla samego tekstu, by wykorzystać potencjał ekranu */
             padding: 12px 12px 100px 12px !important;
             box-sizing: border-box !important;
             overflow-x: hidden !important; 
-            background-color: #ffffff !important;
+            background-color: var(--surface-color) !important;
         }
         
         #contentArea { 
             word-wrap: break-word; 
-            font-size: 17px !important; 
-            background-color: #ffffff !important;
+            font-size: var(--reader-font-size) !important; 
+            background-color: var(--surface-color) !important;
+            color: var(--text-main) !important;
+        }
+
+        /* Wymuszenie czytelności w trybie ciemnym na elementach z SingleFile */
+        [data-theme="dark"] #contentArea *:not(.wnl-note-marker):not(.wnl-extracted-note) {
+            background-color: transparent !important;
+            color: inherit !important;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: 38vh;
+            padding: 0 20px;
         }
 
         /* OBRAZKI EDGE-TO-EDGE */
         .wnl-extracted-image, #contentArea > img {
-            margin: 24px -12px !important; /* Zbijanie marginesów kontenera */
+            margin: 24px -12px !important;
             padding: 0 !important;
             background: transparent !important;
             border-radius: 0 !important;
@@ -140,11 +283,13 @@
             box-sizing: border-box !important;
         }
         
-        .wnl-extracted-image img {
-            width: 100% !important;
+        .wnl-extracted-image img, #contentArea img {
+            max-width: 100% !important;
             height: auto !important;
             border-radius: 0 !important;
             display: block;
+            margin: 0 auto;
+            cursor: zoom-in;
         }
 
         /* =========================================
@@ -153,16 +298,22 @@
 
         .wnl-note-marker {
             cursor: pointer;
-            background-color: #f3f4f6;
-            border: 1px solid #d1d5db;
+            background-color: var(--note-marker-bg) !important;
+            color: var(--text-main) !important;
+            border: 1px solid var(--note-marker-border) !important;
             border-radius: 6px;
             padding: 2px 8px !important;
             margin: 0 4px;
             font-weight: 500;
             user-select: none;
             display: inline-block; 
+            transition: all 0.15s ease;
         }
-        .wnl-note-marker.active { background-color: #dbeafe; border-color: #93c5fd; color: #1e40af;}
+        .wnl-note-marker.active { 
+            background-color: var(--note-marker-active-bg) !important; 
+            border-color: var(--note-marker-active-border) !important; 
+            color: var(--note-marker-active-text) !important;
+        }
 
         .wnl-extracted-note {
             display: none !important; 
@@ -176,10 +327,11 @@
             border-radius: 0 !important; 
             
             /* EFEKT "POD" STRONĄ */
-            background: #f8fafc !important; /* Delikatne przyciemnienie */
+            background: var(--note-bg) !important;
+            color: var(--text-main) !important;
             box-shadow: inset 0px 6px 8px -4px rgba(0,0,0,0.08), inset 0px -6px 8px -4px rgba(0,0,0,0.08) !important;
-            border: none !important; /* Usuwamy stare, płaskie ramki */
-            border-left: 6px solid #3b82f6 !important; /* Mocny, kolorowy akcent z lewej */
+            border: none !important;
+            border-left: 6px solid #3b82f6 !important;
             
             clear: both !important;
         }
@@ -200,20 +352,74 @@
             border-left: 6px solid #a855f7 !important;
             background-color: #faf5ff !important;
         }
+        [data-theme="dark"] .wnl-extracted-note[data-category="mnemotechnika"] {
+            background-color: #2e1065 !important;
+        }
+
+        /* =========================================
+           LIGHTBOX (POWIĘKSZANIE OBRAZKÓW)
+           ========================================= */
+        #lightbox {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+            touch-action: pinch-zoom pan-x pan-y;
+        }
+        #lightbox.active {
+            display: flex;
+        }
+        #lightbox img {
+            max-width: 96%;
+            max-height: 92vh;
+            object-fit: contain;
+            transition: transform 0.2s ease;
+        }
+        #lightbox-close {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            font-size: 22px;
+            cursor: pointer;
+            z-index: 2001;
+        }
     </style>
 </head>
 <body>
 
-<button id="menu-btn">📚</button>
+<div id="progress-container"><div id="progress-bar"></div></div>
+
+<button id="menu-btn" aria-label="Otwórz menu">📚</button>
 <div id="backdrop"></div>
 
 <div id="controls">
+    <div class="menu-drag-handle"></div>
     <div class="menu-header">Opcje czytnika</div>
-    <div class="file-input-wrapper">
-        <input type="file" id="fileInput" accept=".html">
+
+    <div class="toolbar-grid">
+        <button class="tool-btn" id="btnFontDec" title="Zmniejsz czcionkę">A−</button>
+        <button class="tool-btn" id="btnFontInc" title="Zwiększ czcionkę">A+</button>
+        <button class="tool-btn" id="btnTheme" title="Zmień motyw">🌓 Motyw</button>
+        <button class="tool-btn" id="btnToggleNotes" title="Rozwiń/Zwiń wszystkie notatki">📝 Notatki</button>
     </div>
+
+    <div class="file-input-wrapper">
+        <input type="file" id="fileInput" accept=".html,.htm">
+    </div>
+
     <div id="toc-wrapper">
-        <div style="font-weight: 600; margin-bottom: 12px; color: #6b7280; font-size: 14px; letter-spacing: 0.5px;">SPIS TREŚCI</div>
+        <div style="font-weight: 600; margin-bottom: 8px; color: var(--text-muted); font-size: 13px; letter-spacing: 0.5px;">SPIS TREŚCI</div>
+        <input type="text" id="tocSearch" placeholder="Szukaj rozdziału...">
         <div id="toc">
             <ul id="tocList"></ul>
         </div>
@@ -221,77 +427,207 @@
 </div>
 
 <div id="viewer-container">
-    <div id="contentArea" style="text-align: center; color: #9ca3af; margin-top: 40vh;">
-        Wczytaj bazę z menu w prawym dolnym rogu.
+    <div id="contentArea">
+        <div class="empty-state">
+            Wczytaj bazę (.html) z menu w prawym dolnym rogu.
+        </div>
     </div>
+</div>
+
+<!-- Lightbox do podglądu obrazków -->
+<div id="lightbox">
+    <button id="lightbox-close">✕</button>
+    <img id="lightbox-img" src="" alt="Powiększony obraz">
 </div>
 
 <script>
     const menuBtn = document.getElementById('menu-btn');
     const controls = document.getElementById('controls');
     const backdrop = document.getElementById('backdrop');
+    const contentArea = document.getElementById('contentArea');
+    const tocWrapper = document.getElementById('toc-wrapper');
+    const tocList = document.getElementById('tocList');
+    const tocSearch = document.getElementById('tocSearch');
+    const progressBar = document.getElementById('progress-bar');
 
-    function toggleMenu() {
-        controls.classList.toggle('open');
-        backdrop.classList.toggle('open');
+    // =========================================
+    // 1. ZARZĄDZANIE MENU I USTAWIENIAMI
+    // =========================================
+    function toggleMenu(forceState) {
+        const isOpen = typeof forceState === 'boolean' ? forceState : !controls.classList.contains('open');
+        controls.classList.toggle('open', isOpen);
+        backdrop.classList.toggle('open', isOpen);
     }
 
-    menuBtn.addEventListener('click', toggleMenu);
-    backdrop.addEventListener('click', toggleMenu);
+    menuBtn.addEventListener('click', () => toggleMenu());
+    backdrop.addEventListener('click', () => toggleMenu(false));
 
+    // Rozmiar czcionki i motyw z zapisem w localStorage
+    let currentFontSize = parseInt(localStorage.getItem('readerFontSize')) || 17;
+    let currentTheme = localStorage.getItem('readerTheme') || 'light';
+
+    function applyPreferences() {
+        document.documentElement.style.setProperty('--reader-font-size', `${currentFontSize}px`);
+        document.documentElement.setAttribute('data-theme', currentTheme);
+    }
+    applyPreferences();
+
+    document.getElementById('btnFontDec').addEventListener('click', () => {
+        if (currentFontSize > 13) {
+            currentFontSize -= 1;
+            localStorage.setItem('readerFontSize', currentFontSize);
+            applyPreferences();
+        }
+    });
+
+    document.getElementById('btnFontInc').addEventListener('click', () => {
+        if (currentFontSize < 26) {
+            currentFontSize += 1;
+            localStorage.setItem('readerFontSize', currentFontSize);
+            applyPreferences();
+        }
+    });
+
+    document.getElementById('btnTheme').addEventListener('click', () => {
+        currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+        localStorage.setItem('readerTheme', currentTheme);
+        applyPreferences();
+    });
+
+    // Globalne rozwijanie/zwijanie wszystkich notatek
+    let allNotesExpanded = false;
+    document.getElementById('btnToggleNotes').addEventListener('click', () => {
+        const markers = contentArea.querySelectorAll('.wnl-note-marker');
+        if (markers.length === 0) return;
+
+        allNotesExpanded = !allNotesExpanded;
+        markers.forEach(marker => {
+            const targetId = marker.getAttribute('data-target-note');
+            const noteDiv = targetId ? document.getElementById(targetId) : null;
+            if (noteDiv) {
+                if (allNotesExpanded) {
+                    marker.parentNode.insertBefore(noteDiv, marker.nextSibling);
+                    noteDiv.classList.add('is-expanded');
+                    marker.classList.add('active');
+                } else {
+                    noteDiv.classList.remove('is-expanded');
+                    marker.classList.remove('active');
+                }
+            }
+        });
+        toggleMenu(false);
+    });
+
+    // Pasek postępu czytania
+    window.addEventListener('scroll', () => {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+        progressBar.style.width = `${progress}%`;
+    }, { passive: true });
+
+    // =========================================
+    // 2. WCZYTYWANIE PLIKU HTML (NAPRAWIONE)
+    // =========================================
     document.getElementById('fileInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = function(e) {
-            const content = e.target.result;
+        reader.onload = function(event) {
+            const content = event.target.result;
             const parser = new DOMParser();
             const doc = parser.parseFromString(content, 'text/html');
             
+            // NAPRAWA: Usuwamy style z poprzednio wczytanego pliku przed dodaniem nowych
+            document.querySelectorAll('style[data-injected-style="true"]').forEach(el => el.remove());
+
             const styles = doc.querySelectorAll('style');
             styles.forEach(styleNode => {
                 const newStyle = document.createElement('style');
-                newStyle.innerHTML = styleNode.innerHTML;
+                newStyle.setAttribute('data-injected-style', 'true');
+                newStyle.textContent = styleNode.textContent;
                 document.head.appendChild(newStyle);
             });
 
-            let mainContent = doc.querySelector('#paper') ? doc.querySelector('#paper').innerHTML : doc.body.innerHTML;
-            document.getElementById('contentArea').innerHTML = mainContent;
+            // Wstrzyknięcie głównej treści
+            const paper = doc.querySelector('#paper');
+            contentArea.innerHTML = paper ? paper.innerHTML : doc.body.innerHTML;
 
+            // Przywrócenie obrazków SingleFile
             restoreSingleFileImages(doc);
 
-            const tocList = document.getElementById('tocList');
-            tocList.innerHTML = '';
-            const headers = document.getElementById('contentArea').querySelectorAll('h1, h2, h3');
-            
-            if(headers.length > 0) {
-                document.getElementById('toc-wrapper').style.display = 'flex';
-                headers.forEach((h, index) => {
-                    const id = `heading-${index}`;
-                    h.setAttribute('id', id); 
-                    const li = document.createElement('li');
-                    li.innerHTML = `<a href="#${id}">${h.innerText}</a>`;
-                    
-                    li.querySelector('a').addEventListener('click', () => {
-                        toggleMenu();
-                    });
-                    tocList.appendChild(li);
-                });
-            } else {
-                document.getElementById('toc-wrapper').style.display = 'none';
-            }
+            // Budowanie Spisu Treści (TOC)
+            buildTableOfContents();
 
-            setupInteractiveNotes();
-            toggleMenu();
+            // Przewijamy na samą górę nowego dokumentu i zamykamy menu
+            window.scrollTo({ top: 0, behavior: 'instant' });
+            allNotesExpanded = false;
+            toggleMenu(false);
         };
         reader.readAsText(file);
+        
+        // Reset wartości inputa, by umożliwić ponowne wybranie tego samego pliku
+        e.target.value = '';
     });
 
+    // =========================================
+    // 3. SPIS TREŚCI + FILTROWANIE
+    // =========================================
+    function buildTableOfContents() {
+        tocList.innerHTML = '';
+        tocSearch.value = '';
+        const headers = contentArea.querySelectorAll('h1, h2, h3');
+        
+        if (headers.length > 0) {
+            tocWrapper.style.display = 'flex';
+            headers.forEach((h, index) => {
+                const text = h.textContent.trim();
+                if (!text) return;
+
+                const id = `heading-${index}`;
+                h.setAttribute('id', id); 
+
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = `#${id}`;
+                a.textContent = text;
+                a.classList.add(`toc-${h.tagName.toLowerCase()}`);
+                
+                a.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    toggleMenu(false);
+                    const targetEl = document.getElementById(id);
+                    if (targetEl) {
+                        targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+
+                li.appendChild(a);
+                tocList.appendChild(li);
+            });
+        } else {
+            tocWrapper.style.display = 'none';
+        }
+    }
+
+    // Wyszukiwarka w spisie treści
+    tocSearch.addEventListener('input', function() {
+        const query = this.value.toLowerCase().trim();
+        const items = tocList.querySelectorAll('li');
+        items.forEach(li => {
+            const text = li.textContent.toLowerCase();
+            li.style.display = text.includes(query) ? '' : 'none';
+        });
+    });
+
+    // =========================================
+    // 4. OBRAZKI SINGLEFILE
+    // =========================================
     function restoreSingleFileImages(doc) {
         const styles = doc.querySelectorAll('style');
         let allCSS = '';
-        styles.forEach(s => allCSS += s.innerHTML);
+        styles.forEach(s => allCSS += s.textContent);
 
         const sfImages = {};
         const regex = /(--sf-img-\d+)\s*:\s*url\(['"]?(data:image\/[^'"\)]+)['"]?\)/g;
@@ -300,7 +636,6 @@
             sfImages[match[1]] = match[2]; 
         }
 
-        const contentArea = document.getElementById('contentArea');
         const images = contentArea.querySelectorAll('img');
         
         images.forEach(img => {
@@ -337,34 +672,54 @@
         });
     }
 
-    function setupInteractiveNotes() {
-        const contentArea = document.getElementById('contentArea');
-        
-        contentArea.addEventListener('click', function(e) {
-            const marker = e.target.closest('.wnl-note-marker');
-            if (marker) {
-                const targetId = marker.getAttribute('data-target-note');
-                if (!targetId) return;
+    // =========================================
+    // 5. OBSŁUGA NOTATEK I POWIĘKSZANIA OBRAZKÓW
+    //    (Rejestrowana raz - naprawia duplikację zdarzeń!)
+    // =========================================
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxClose = document.getElementById('lightbox-close');
 
-                const noteDiv = document.getElementById(targetId);
-                if (noteDiv) {
-                    const isExpanded = noteDiv.classList.contains('is-expanded');
-                    
-                    if (!isExpanded) {
-                        marker.parentNode.insertBefore(noteDiv, marker.nextSibling);
-                    }
+    contentArea.addEventListener('click', function(e) {
+        // 1. Kliknięcie w znacznik notatki
+        const marker = e.target.closest('.wnl-note-marker');
+        if (marker) {
+            const targetId = marker.getAttribute('data-target-note');
+            if (!targetId) return;
 
-                    if (isExpanded) {
-                        noteDiv.classList.remove('is-expanded');
-                        marker.classList.remove('active');
-                    } else {
-                        noteDiv.classList.add('is-expanded');
-                        marker.classList.add('active');
-                    }
+            const noteDiv = document.getElementById(targetId);
+            if (noteDiv) {
+                const isExpanded = noteDiv.classList.contains('is-expanded');
+                
+                if (!isExpanded) {
+                    marker.parentNode.insertBefore(noteDiv, marker.nextSibling);
+                    noteDiv.classList.add('is-expanded');
+                    marker.classList.add('active');
+                } else {
+                    noteDiv.classList.remove('is-expanded');
+                    marker.classList.remove('active');
                 }
             }
-        });
+            return;
+        }
+
+        // 2. Kliknięcie w obrazek (otwiera Lightbox)
+        const clickedImg = e.target.closest('img');
+        if (clickedImg && clickedImg.src) {
+            lightboxImg.src = clickedImg.src;
+            lightbox.classList.add('active');
+        }
+    });
+
+    // Zamykanie Lightboxa
+    function closeLightbox() {
+        lightbox.classList.remove('active');
+        lightboxImg.src = '';
     }
+    lightboxClose.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox) closeLightbox();
+    });
 </script>
 </body>
 </html>
